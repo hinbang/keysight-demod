@@ -36,12 +36,12 @@
             <widget class="QComboBox" name="comboBox">
              <item>
               <property name="text">
-               <string>32QAM</string>
+               <string>Qam32</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>64QAM</string>
+               <string>Qam64</string>
               </property>
              </item>
             </widget>
@@ -136,14 +136,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_3">
+            <widget class="QPushButton" name="pushButton">
              <property name="text">
               <string>START DEMOD</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_4">
+            <widget class="QPushButton" name="pushButton_2">
              <property name="text">
               <string>STOP DEMOD</string>
              </property>
@@ -173,12 +173,12 @@
             <widget class="QComboBox" name="comboBox_2">
              <item>
               <property name="text">
-               <string>32QAM</string>
+               <string>Qam32</string>
               </property>
              </item>
              <item>
               <property name="text">
-               <string>64QAM</string>
+               <string>Qam64</string>
               </property>
              </item>
             </widget>
@@ -273,14 +273,14 @@
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton">
+            <widget class="QPushButton" name="pushButton_3">
              <property name="text">
               <string>START DEMOD</string>
              </property>
             </widget>
            </item>
            <item>
-            <widget class="QPushButton" name="pushButton_2">
+            <widget class="QPushButton" name="pushButton_4">
              <property name="text">
               <string>STOP DEMOD</string>
              </property>
