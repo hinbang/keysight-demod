@@ -52,11 +52,20 @@ appMeas.Input.DataFrom = DataSource.Hardware
 appMeas.IsContinuous = True
 appMeas.Restart()
 
+# 设置均衡, 
+measHandle.IsEqualized = True
+measHandle.EqualizerFilterLength = 9
+measHandle.EqualizerConvergence = 2e-10
+# measHandle.EqualizerReset()
+measHandle.EqualizerMode = EqualizerMode.Run  # EqualizerMode.Run or EqualizerMode.Hold
+
+
 # wait for measdone, but don't bother it too often
 # Set timeout to 2 seconds
 bMeasDone = 0
 t0=time.time()
 appMeasStatus = appMeas.Status
+
 
 while(bMeasDone==0 and (time.time()-t0)<=2):
    time.sleep(1)

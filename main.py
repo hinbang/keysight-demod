@@ -20,8 +20,10 @@ class Thread(QThread):
     def __init__(self):
         super(Thread, self).__init__()
     def run(self):
-        
+        pass
+    
 class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
+
     def __init__(self,parent=None):
         super(DisplayWindow,self).__init__(parent)
         self.setUi()
