@@ -16,6 +16,11 @@ except Exception as e:
     pass
 
 
+class Thread(QThread):
+    def __init__(self):
+        super(Thread, self).__init__()
+    def run(self):
+        
 class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(DisplayWindow,self).__init__(parent)
@@ -35,11 +40,11 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         # self.IQ_data = []
         # threading.Timer(1,self.PlotMap).start()
 
-        #self.ui.graphicsView.setRange(xRange=(-3,3), yRange=(-3,3),disableAutoRange=True)
-        #self.ui.graphicsView.setMouseEnabled(x=False, y=False)
+        self.ui.graphicsView.setRange(xRange=(-3,3), yRange=(-3,3),disableAutoRange=True)
+        self.ui.graphicsView.setMouseEnabled(x=False, y=False)
         self.ui.graphicsView_2.setRange(xRange=(-3,3), yRange=(-3,3),disableAutoRange=True)
         self.ui.graphicsView_2.setMouseEnabled(x=False, y=False)
-        self.ui.pushButton.clicked.connect(self.demod_thread)
+        self.ui.pushButton.clicked.connect(lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0,self.ui.graphicsView))
         #self.ui.pushButton_3.clicked.connect(lambda:self.StartDemod())
 
     def InstrumentSetup(self):
@@ -51,14 +56,15 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.appDisp = self.app.Display
         self.app.IsVisible = True
         self.app.Title = 'Demod Measurement Test'
-        # Create a measurement
+        # Create four measurement
         self.appMeasItem_1 = self.app.Measurements.SelectedItem
+        self.appMeasItem_2 = self.app.Measurements.SelectedItem
         # self.appMeasItem_2 = self.app.Measurements.SelectedItem # Need to be overWrite 
 
-    def demod_thread(self):
-        threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
+    # def demod_thread(self):
+        # threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
                 
-    def StartDemod(self,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num):
+    def StartDemod(self,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,viewer):
         print([demodem,symbol_rate,center_freq,filter_val])
         for item in [demodem,symbol_rate,center_freq,filter_val]: 
             if item == '':
@@ -102,55 +108,56 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
             time.sleep(1)
             bMeasDone = StatusBits.MeasurementDone
         
-        self.appDisp.Traces.SelectedIndex = 0
-        self.appTrace = self.appDisp.Traces.SelectedItem
-        print(self.appTrace)
+        # select IQ trace
+        self.appDisp.Traces.SelectedIndex = (channel_num-1)*4
+        appTrace_IQ = self.appDisp.Traces.SelectedItem
+        # select symbol trace
+        self.appDisp.Traces.SelectedIndex = (channel_num-1)*4+3
+        appTrace_symbol = self.appDisp.Traces.SelectedItem
 
         Data_origin = pd.read_csv(r"C:\Users\Administrator\Desktop\VSABitErrorRate\len4020_32QAM_origin_sym.csv")
-        self.initPlotTimer()
+        self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem)                            
+
+
+    def initChannelTimer(self,appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem):
+        self.serial_plot_timer = QtCore.QTimer()
+        self.serial_plot_timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem))
+        self.serial_plot_timer.start(2000) 
+
     
-                           
+    def DisplayAll(self,appTrace_IQ,appTrace_symbol,Data_origin,demodem):
+        self.PlotMap(appTrace_IQ,viewer,channel_num)
+        self.BerCal(Data_origin,appTrace_symbol,channel_num,demodem)
 
 
-    def PlotMap(self):
-        print('i am in------------------------------------')
-        self.appTrace.SaveFile(r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_Data.csv','CSV', False)
-        self.Data_output = pd.read_csv(r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_Data.csv') 
-        print(self.Data_output)   
+    def PlotMap(self,appTrace_IQ,viewer,channel_num):
+        file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_IQ_Data_channel'+str(channel_num)+r'.csv'
+        appTrace_IQ.SaveFile(file_path,'CSV', False)
+        Data_output = pd.read_csv(file_path)  
         I = Q = []
-        constellation_32 = np.array([-1-1j, -1-3j, -1+1j, -1+3j, -3-1j, -3-3j, -3+1j, -3+3j, 
-                                    1-1j, 1-3j, 1+1j, 1+3j, 3-1j, 3-3j, 3+1j, 3+3j, 
-                                    -5-3j, -1-5j, -5+3j, -1+5j, -5-1j, -3-5j, -5+1j, -3+5j, 
-                                    5-3j, 1-5j, 5+3j, 1+5j, 5-1j, 3-5j, 5+1j, 3+5j]) / pow(34,0.5)
-        constellation_64 = np.array([-7+7j, -7+5j, -7+1j, -7+3j, -7-7j, -7-5j, -7-1j, -7-3j, 
-                                    -5+7j, -5+5j, -5+1j, -5+3j, -5-7j, -5-5j, -5-1j, -5-3j, 
-                                    -1+7j, -1+5j, -1+1j, -1+3j, -1-7j, -1-5j, -1-1j, -1-3j, 
-                                    -3+7j, -3+5j, -3+1j, -3+3j, -3-7j, -3-5j, -3-1j, -3-3j, 
-                                    7+7j, 7+5j, 7+1j, 7+3j, 7-7j, 7-5j, 7-1j, 7-3j, 
-                                    5+7j, 5+5j, 5+1j, 5+3j, 5-7j, 5-5j, 5-1j, 5-3j, 
-                                    1+7j, 1+5j, 1+1j, 1+3j, 1-7j, 1-5j, 1-1j, 1-3j, 
-                                    3+7j, 3+5j, 3+1j, 3+3j, 3-7j, 3-5j, 3-1j, 3-3j]) / pow(98,0.5) 
-        #print(self.Data_output.T.values.tolist())
-        tmp_data = self.Data_output.T.values.tolist()
+
+        tmp_data = Data_output.T.values.tolist()
         print(np.array(tmp_data).shape)
         I = tmp_data[0]
         Q = tmp_data[1]
-        #print('Demod Continueing')
-        #print(self.IQ_data)
-        self.ui.graphicsView.clear()
-        self.ui.graphicsView.plot(I, Q, pen=None, symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
-        
-    def BerCal(self):
-        return None
+
+        viewer.clear()
+        viewer.plot(I,Q,pen=None,symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
+
+
+    def BerCal(self,Data_origin,appTrace_symbol,channel_num,demodem):
+        file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_Symbol_Data_channel'+str(channel_num)+r'.csv'
+        appTrace_symbol.SaveFile(file_path,'CSV', False)
+        Data_output = pd.read_csv(file_path)  
+        demod_N = demodem[3:] # value is 16 32 64 or 128
+        symbol_list = Data_output.T.values.tolist()  # demod symbol 
+
+
+        ber = 0
+        return ber
     
     def DataRateCal(self): 
         return None
-
-    def initPlotTimer(self):
-        self.serial_plot_timer = QtCore.QTimer()
-        self.serial_plot_timer.timeout.connect(lambda: self.PlotMap())
-        self.serial_plot_timer.start(2000)
-
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
