@@ -64,7 +64,7 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     # def demod_thread(self):
         # threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
                 
-    def StartDemod(self,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,viewer):
+    def StartDemod(self,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer):
         print([demodem,symbol_rate,center_freq,filter_val])
         for item in [demodem,symbol_rate,center_freq,filter_val]: 
             if item == '':
@@ -116,12 +116,12 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         appTrace_symbol = self.appDisp.Traces.SelectedItem
 
         Data_origin = pd.read_csv(r"C:\Users\Administrator\Desktop\VSABitErrorRate\len4020_32QAM_origin_sym.csv")
-        self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem)                            
+        self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem)                            
 
 
-    def initChannelTimer(self,appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem):
+    def initChannelTimer(self,appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem):
         self.serial_plot_timer = QtCore.QTimer()
-        self.serial_plot_timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,viewer,channel_num,demodem))
+        self.serial_plot_timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem))
         self.serial_plot_timer.start(2000) 
 
     
@@ -130,7 +130,7 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.BerCal(Data_origin,appTrace_symbol,channel_num,demodem)
 
 
-    def PlotMap(self,appTrace_IQ,viewer,channel_num):
+    def PlotMap(self,appTrace_IQ,graphViewer,channel_num):
         file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_IQ_Data_channel'+str(channel_num)+r'.csv'
         appTrace_IQ.SaveFile(file_path,'CSV', False)
         Data_output = pd.read_csv(file_path)  
@@ -141,8 +141,8 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         I = tmp_data[0]
         Q = tmp_data[1]
 
-        viewer.clear()
-        viewer.plot(I,Q,pen=None,symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
+        graphViewer.clear()
+        graphViewer.plot(I,Q,pen=None,symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
 
 
     def BerCal(self,Data_origin,appTrace_symbol,channel_num,demodem):
