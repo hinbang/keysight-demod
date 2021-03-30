@@ -4,8 +4,6 @@ from mainwindow import *
 from ctypes import *
 #from Agilent.SA.Vsa import *    #Overwriting by dll method
 
-
-
 class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def __init__(self,parent=None):
         super(DisplayWindow,self).__init__(parent)
@@ -66,13 +64,14 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.measHandle.FilterAlphaBT = 0.2
         self.measHandle.MeasurementFilter = Agilent.SA.Vsa.DigitalDemod.MeasurementFilter
         self.measHandle.RecallStateDefinitionsFile('C:\Users\Administrator\Desktop\VSABitErrorRate\QAM32.csd')
-           
+
 
 
     def PlotMap(self):
         return None
         
     def BerCal(self):
+        
         return None
     
     def DataRateCal(self): 

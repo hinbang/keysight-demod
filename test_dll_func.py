@@ -58,6 +58,7 @@ bMeasDone = 0
 t0=time.time()
 appMeasStatus = appMeas.Status
 
+
 while(bMeasDone==0 and (time.time()-t0)<=2):
    time.sleep(1)
    bMeasDone = StatusBits.MeasurementDone
