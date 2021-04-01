@@ -6,15 +6,15 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1866</width>
-    <height>861</height>
+    <width>1280</width>
+    <height>881</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>VLC Demod</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,9">
+   <layout class="QHBoxLayout" name="horizontalLayout_15" stretch="1,12">
     <item>
      <layout class="QVBoxLayout" name="verticalLayout_9" stretch="0,0">
       <item>
@@ -26,13 +26,29 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_12" stretch="0,0">
            <item>
-            <widget class="QComboBox" name="comboBox_3"/>
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>选择数据源</string>
+             </property>
+            </widget>
            </item>
            <item>
-            <widget class="QToolButton" name="toolButton">
-             <property name="text">
-              <string>...</string>
-             </property>
+            <widget class="QComboBox" name="comboBox_3">
+             <item>
+              <property name="text">
+               <string>32QAM_120M.csv</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>64QAM_120M.csv</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>64QAM_150M.csv</string>
+              </property>
+             </item>
             </widget>
            </item>
           </layout>
@@ -141,9 +157,9 @@
           </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_5" stretch="0,0,0,0">
            <item>
-            <widget class="QLabel" name="label_17">
+            <widget class="QLabel" name="label_16">
              <property name="text">
               <string>通道状态 ：</string>
              </property>
@@ -163,6 +179,19 @@
              </property>
             </widget>
            </item>
+           <item>
+            <spacer name="verticalSpacer">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
           </layout>
          </item>
         </layout>
@@ -177,14 +206,14 @@
          <item>
           <layout class="QHBoxLayout" name="horizontalLayout_13" stretch="0,0">
            <item>
-            <widget class="QComboBox" name="comboBox_5"/>
-           </item>
-           <item>
-            <widget class="QToolButton" name="toolButton_3">
+            <widget class="QLabel" name="label_19">
              <property name="text">
-              <string>...</string>
+              <string>选择数据源</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <widget class="QComboBox" name="comboBox_4"/>
            </item>
           </layout>
          </item>
@@ -292,9 +321,9 @@
           </widget>
          </item>
          <item>
-          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0">
+          <layout class="QVBoxLayout" name="verticalLayout_6" stretch="0,0,0,0">
            <item>
-            <widget class="QLabel" name="label_16">
+            <widget class="QLabel" name="label_17">
              <property name="text">
               <string>通道状态 ：</string>
              </property>
@@ -313,6 +342,19 @@
               <string>STOP DEMOD</string>
              </property>
             </widget>
+           </item>
+           <item>
+            <spacer name="verticalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Vertical</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>20</width>
+               <height>40</height>
+              </size>
+             </property>
+            </spacer>
            </item>
           </layout>
          </item>
@@ -406,7 +448,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1866</width>
+     <width>1280</width>
      <height>22</height>
     </rect>
    </property>

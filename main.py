@@ -1,12 +1,6 @@
 import sys
-import time,clr
-import pandas as pd
-import threading
-import numpy as np
-from PyQt5 import QtWidgets
-from mainwindow import *
-
-
+import time
+from clr import System
 try:
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.Interfaces.dll')
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.DigitalDemod.Interfaces.dll')
@@ -15,6 +9,12 @@ try:
 except Exception as e:
     pass
 
+import pandas as pd
+import threading
+import numpy as np
+from PyQt5.QtWidgets import QMainWindow,QFileDialog,QMessageBox,QApplication
+from mainwindow import *
+
 
 """ class Thread(QThread):
     def __init__(self):
@@ -22,7 +22,7 @@ except Exception as e:
     def run(self):
         pass """
     
-class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
+class DisplayWindow(QMainWindow,Ui_MainWindow):
 
     def __init__(self,parent=None):
         super(DisplayWindow,self).__init__(parent)
@@ -31,7 +31,7 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     def setUi(self):
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.InstrumentSetup()
+        #self.InstrumentSetup()
 
         self.demodem_1 = self.ui.comboBox.currentText()
         self.symbol_rate_1 = self.ui.lineEdit.text()
@@ -46,10 +46,27 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.ui.graphicsView.setMouseEnabled(x=False, y=False)
         self.ui.graphicsView_2.setRange(xRange=(-1,1), yRange=(-1,1),disableAutoRange=True)
         self.ui.graphicsView_2.setMouseEnabled(x=False, y=False)
-        self.ui.pushButton.clicked.connect(lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView))
-        #self.ui.pushButton_2.clicked.connect(lambda:self.timer1.stop())
+        self.ui.pushButton.clicked.connect(lambda:self.startDemod(self.ui.label_18,self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView,self.ui.label_16))
+        self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
         #self.ui.pushButton_3.clicked.connect(lambda:self.StartDemod())
 
+        self.ui.pushButton_5.clicked.connect(lambda: self.showDialog(self.ui.label_18))
+        self.ui.pushButton_6.clicked.connect(lambda: self.showDialog(self.ui.label_19))
+    
+    def showDialog(self,label):
+        fname = QFileDialog.getOpenFileName(self, 'Open file', r'C:\Users\Administrator\Desktop\VSABitErrorRate')
+        originfile_path = fname[0]
+        filelist = originfile_path.split('/')
+        filename = filelist[-1]
+        #if len(filename)>15:
+            #filename = filename[0:14]+'...'
+        label.setText(filename)
+
+    def stopDemod(self,timer,label,graphViewer):
+        timer.stop()
+        graphViewer.clear()
+        label.setText('关闭')
+    
     def InstrumentSetup(self):
         # 实例化一个 application
         self.app = ApplicationFactory.Create()
@@ -67,11 +84,11 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
     # def demod_thread(self):
         # threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
                 
-    def StartDemod(self,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer):
+    def startDemod(self,filename,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer):
         print([demodem,symbol_rate,center_freq,filter_val])
         for item in [demodem,symbol_rate,center_freq,filter_val]: 
             if item == '':
-                QtWidgets.QMessageBox.question(self,"Error","缺少参数！")
+                QMessageBox.question(self,"Error","缺少参数！")
                 return None
         # Calibrate the hardware
         appCAL = appMeas.SelectedAnalyzer.Calibration
@@ -118,7 +135,12 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         self.appDisp.Traces.SelectedIndex = (channel_num-1)*4+3
         appTrace_symbol = self.appDisp.Traces.SelectedItem
 
-        Data_origin = pd.read_csv(r"C:\Users\Administrator\Desktop\VSABitErrorRate\len4020_32QAM_origin_sym.csv")
+        file_dict = {
+            '32QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+            '64QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+            '64QAM_150M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+        }
+        Data_origin = pd.read_csv(file_dict[])
         self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem)                            
 
 
@@ -133,7 +155,6 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
 
     
     def DisplayAll(self,appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer):
-        print(2)
         self.PlotMap(appTrace_IQ,graphViewer,channel_num)
         self.BerCal(Data_origin,appTrace_symbol,channel_num,demodem)
 
@@ -169,7 +190,7 @@ class DisplayWindow(QtWidgets.QMainWindow,Ui_MainWindow):
         return None
 
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
+    app = QApplication(sys.argv)
     window = DisplayWindow()
     window.show()
     sys.exit(app.exec_())
