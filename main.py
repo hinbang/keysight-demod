@@ -1,8 +1,4 @@
 import sys
-<<<<<<< HEAD
-import time
-from clr import System
-=======
 import time,clr
 import pandas as pd
 import threading
@@ -11,7 +7,6 @@ from PyQt5 import QtWidgets
 from mainwindow import *
 import math
 
->>>>>>> 0f37bafccdba939de3381776dbc5465dd38dc8e6
 try:
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.Interfaces.dll')
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.DigitalDemod.Interfaces.dll')
