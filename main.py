@@ -46,12 +46,17 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         self.ui.graphicsView.setMouseEnabled(x=False, y=False)
         self.ui.graphicsView_2.setRange(xRange=(-1,1), yRange=(-1,1),disableAutoRange=True)
         self.ui.graphicsView_2.setMouseEnabled(x=False, y=False)
-        self.ui.pushButton.clicked.connect(lambda:self.startDemod(self.ui.label_18,self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView,self.ui.label_16))
-        self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
-        #self.ui.pushButton_3.clicked.connect(lambda:self.StartDemod())
 
-        self.ui.pushButton_5.clicked.connect(lambda: self.showDialog(self.ui.label_18))
-        self.ui.pushButton_6.clicked.connect(lambda: self.showDialog(self.ui.label_19))
+        # channel 1
+        self.ui.pushButton.clicked.connect(lambda:self.startDemod(self.ui.comboBox_3.currentText(),self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView,self.ui.label_16)
+        self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
+        
+        # channel 2
+        self.ui.pushButton_3.clicked.connect(lambda:self.StartDemod(self.ui.comboBox_4.currentText(),self.ui.comboBox_2.currentText(),self.ui.lineEdit_4.text(),self.ui.lineEdit_5.text(),self.ui.lineEdit_6.text(),self.appMeasItem_2,2,self.ui.graphicsView_2,self.ui.label_17))
+        self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
+
+        #self.ui.pushButton_5.clicked.connect(lambda: self.showDialog(self.ui.label_18))
+        #self.ui.pushButton_6.clicked.connect(lambda: self.showDialog(self.ui.label_19))
     
     def showDialog(self,label):
         fname = QFileDialog.getOpenFileName(self, 'Open file', r'C:\Users\Administrator\Desktop\VSABitErrorRate')
@@ -84,7 +89,7 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
     # def demod_thread(self):
         # threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
                 
-    def startDemod(self,filename,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer):
+    def startDemod(self,filename,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer,filepath):
         print([demodem,symbol_rate,center_freq,filter_val])
         for item in [demodem,symbol_rate,center_freq,filter_val]: 
             if item == '':
@@ -140,7 +145,7 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
             '64QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
             '64QAM_150M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
         }
-        Data_origin = pd.read_csv(file_dict[])
+        Data_origin = pd.read_csv(file_dict[filename])
         self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem)                            
 
 
