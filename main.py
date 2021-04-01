@@ -1,6 +1,17 @@
 import sys
+<<<<<<< HEAD
 import time
 from clr import System
+=======
+import time,clr
+import pandas as pd
+import threading
+import numpy as np
+from PyQt5 import QtWidgets
+from mainwindow import *
+import math
+
+>>>>>>> 0f37bafccdba939de3381776dbc5465dd38dc8e6
 try:
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.Interfaces.dll')
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.DigitalDemod.Interfaces.dll')
@@ -16,11 +27,11 @@ from PyQt5.QtWidgets import QMainWindow,QFileDialog,QMessageBox,QApplication
 from mainwindow import *
 
 
-""" class Thread(QThread):
+class Thread(QThread):
     def __init__(self):
         super(Thread, self).__init__()
     def run(self):
-        pass """
+        pass
     
 class DisplayWindow(QMainWindow,Ui_MainWindow):
 
@@ -42,9 +53,9 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         # self.IQ_data = []
         # threading.Timer(1,self.PlotMap).start()
 
-        self.ui.graphicsView.setRange(xRange=(-1,1), yRange=(-1,1),disableAutoRange=True)
+        self.ui.graphicsView.setRange(xRange=(-3,3), yRange=(-3,3),disableAutoRange=True)
         self.ui.graphicsView.setMouseEnabled(x=False, y=False)
-        self.ui.graphicsView_2.setRange(xRange=(-1,1), yRange=(-1,1),disableAutoRange=True)
+        self.ui.graphicsView_2.setRange(xRange=(-3,3), yRange=(-3,3),disableAutoRange=True)
         self.ui.graphicsView_2.setMouseEnabled(x=False, y=False)
 
         # channel 1
@@ -53,7 +64,7 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         
         # channel 2
         self.ui.pushButton_3.clicked.connect(lambda:self.StartDemod(self.ui.comboBox_4.currentText(),self.ui.comboBox_2.currentText(),self.ui.lineEdit_4.text(),self.ui.lineEdit_5.text(),self.ui.lineEdit_6.text(),self.appMeasItem_2,2,self.ui.graphicsView_2,self.ui.label_17))
-        self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
+        self.ui.pushButton_4.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
 
         #self.ui.pushButton_5.clicked.connect(lambda: self.showDialog(self.ui.label_18))
         #self.ui.pushButton_6.clicked.connect(lambda: self.showDialog(self.ui.label_19))
@@ -83,7 +94,7 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         self.app.Title = 'Demod Measurement Test'
         # Create four measurement
         self.appMeasItem_1 = self.app.Measurements.SelectedItem
-        # self.appMeasItem_2 = self.app.Measurements.SelectedItem
+        self.appMeasItem_2 = self.app.Measurements.SelectedItem
         # self.appMeasItem_2 = self.app.Measurements.SelectedItem # Need to be overWrite 
 
     # def demod_thread(self):
@@ -150,13 +161,9 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
 
 
     def initChannelTimer(self,appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem):
-        exec('self.timer{} = QtCore.QTimer()'.format(channel_num))
-        timer = eval('self.timer{}'.format(channel_num))
-        print(timer)
-        timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer))
-        timer.start(2000)
-        #exec('self.timer{}.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem))'.format(channel_num))
-        #exec('self.timer{}.start(2000)'.format(channel_num))
+        self.serial_plot_timer = QtCore.QTimer()
+        self.serial_plot_timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem))
+        self.serial_plot_timer.start(2000) 
 
     
     def DisplayAll(self,appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer):
@@ -175,7 +182,6 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         I = tmp_data[0]
         Q = tmp_data[1]
 
-        print(graphViewer)
         graphViewer.clear()
         graphViewer.plot(I,Q,pen=None,symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
 
@@ -186,9 +192,57 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         Data_output = pd.read_csv(file_path)  
         demod_N = demodem[3:] # value is 16 32 64 or 128
         symbol_list = Data_output.T.values.tolist()  # demod symbol 
+        
+        origin_list = Data_origin.T.values.tolist()
+        bit_Data_origin=[]
+        bit_symbol_list=[]
 
-
-        ber = 0
+        Demod_N=int(demod_N)
+        M=int(math.log(Demod_N,2))
+        
+        for i in range(0,len(origin_list)-1):
+            b1=bin(origin_list[i])
+            b2=b1[2:]
+            dim_1 = [0 for index in range(M-len(b2))] # 生成长度为M-len(b)的零列表
+            z1=dim_1+b2
+            bit_Data_origin=bit_Data_origin+z1
+            
+        for j in range(0,len(symbol_list)-1):
+            b3=bin(symbol_list[i])
+            b4=b3[2:]
+            dim_2 = [0 for index in range(M-len(b4))] 
+            z2=dim_2+b4
+            bit_symbol_list= bit_symbol_list+z2
+           
+        t = 0
+        Times = 500
+        findedTimes = 0
+        bitErrorRate_total = 0
+        frameHeader=bit_Data_origin[1:80]
+        ber = 0 
+        while t<Times:
+            frameHeader_rate=0
+            z=0
+            for n in range(0,79):
+                if bit_symbol_list[n]==0:
+                    z+=1
+              
+            frameHeader_rate=z/80###
+            bitErrorRate = 0
+            for g in range(0,len(bit_symbol_list)-81):
+                if frameHeader_rate>=0.5:
+                    data_after=bit_symbol_list[80,len(bit_symbol_list)]
+                    findedTimes = findedTimes + 1
+                    k=0
+                    for l in range(0,len(bit_symbol_list)-81):
+                        if data_after[l]!=bit_Data_origin[80+l]:
+                            k+=1
+                    bitErrorRate=k/len(data_after)
+            bitErrorRate_total = bitErrorRate_total + bitErrorRate
+            t = t + 1  
+        
+        Ber = bitErrorRate_total/findedTimes 
+        ber = "%.2f%%" % (Ber * 100) #百分数保留两位小数
         return ber
     
     def DataRateCal(self): 
