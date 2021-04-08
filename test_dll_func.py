@@ -3,6 +3,7 @@
 # import sys
 import clr
 import time
+import pandas as pd
 
 # 将动态连接库的函数导出
 clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.Interfaces.dll')
@@ -18,8 +19,13 @@ if app == None:
 app.IsVisible = True
 app.Title = 'Demod Measurement Test'
 
-# 创建一次测量，选取当前的硬件通道作为输入
+# 创建一次测量，选取当前的硬件通道作为输入                                       
 appMeas = app.Measurements.SelectedItem
+
+hardware_group1 = app.Hardware.Configurations.get_Item(1)
+
+appMeas.SelectedAnalyzer = hardware_group1
+
 
 # 校准当前的硬件
 appCAL = appMeas.SelectedAnalyzer.Calibration
@@ -57,8 +63,7 @@ measHandle.IsEqualized = True
 measHandle.EqualizerFilterLength = 9
 measHandle.EqualizerConvergence = 2e-10
 # measHandle.EqualizerReset()
-measHandle.EqualizerMode = EqualizerMode.Run  # EqualizerMode.Run or EqualizerMode.Hold
-
+measHandle.EqualizerMode = EqualizerMode.Hold  # EqualizerMode.Run or EqualizerMode.Hold
 
 # wait for measdone, but don't bother it too often
 # Set timeout to 2 seconds
@@ -66,10 +71,17 @@ bMeasDone = 0
 t0=time.time()
 appMeasStatus = appMeas.Status
 
-
 while(bMeasDone==0 and (time.time()-t0)<=2):
    time.sleep(1)
    bMeasDone = StatusBits.MeasurementDone
+
+file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\EVM.csv'
+appDisp = app.Display
+appDisp.Traces.SelectedIndex = 3
+appTrace = appDisp.Traces.SelectedItem
+appTrace.SaveFile(file_path,'CSV', True)
+dataOutput = pd.read_csv(file_path).T.values.tolist()
+print(dataOutput[0][7])
 
 # 删除对象
 del app

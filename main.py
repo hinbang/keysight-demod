@@ -5,7 +5,7 @@ import threading
 import numpy as np
 from PyQt5 import QtWidgets
 from mainwindow import *
-import math
+import math,sympy
 
 try:
     clr.AddReference('C:\Program Files\Agilent\89600 Software 2019\89600 VSA Software\Examples\DotNET\Interfaces\Agilent.SA.Vsa.Interfaces.dll')
@@ -44,11 +44,6 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         self.center_freq_1 = self.ui.lineEdit_2.text()
         self.filter_val_1 = self.ui.lineEdit_3.text()
 
-        self.times = 0
-        self.ber_count = 0
-        self.error_count_total = 0
-        self.ber = 0 
-
         # plot timer
         # self.IQ_data = []
         # threading.Timer(1,self.PlotMap).start()
@@ -59,11 +54,11 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         self.ui.graphicsView_2.setMouseEnabled(x=False, y=False)
 
         # channel 1
-        self.ui.pushButton.clicked.connect(lambda:self.startDemod(self.ui.comboBox_3.currentText(),self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView,self.ui.label_16))
+        self.ui.pushButton.clicked.connect(lambda:self.startDemod(self.ui.comboBox_3.currentText(),self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,1,self.ui.graphicsView,self.ui.label_20,self.ui.label_21))
         self.ui.pushButton_2.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
         
         # channel 2
-        self.ui.pushButton_3.clicked.connect(lambda:self.startDemod(self.ui.comboBox_4.currentText(),self.ui.comboBox_2.currentText(),self.ui.lineEdit_4.text(),self.ui.lineEdit_5.text(),self.ui.lineEdit_6.text(),self.appMeasItem_2,2,self.ui.graphicsView_2,self.ui.label_17))
+        self.ui.pushButton_3.clicked.connect(lambda:self.startDemod(self.ui.comboBox_4.currentText(),self.ui.comboBox_2.currentText(),self.ui.lineEdit_4.text(),self.ui.lineEdit_5.text(),self.ui.lineEdit_6.text(),self.appMeasItem_2,2,self.ui.graphicsView_2,self.ui.label_22,self.ui.label_23))
         self.ui.pushButton_4.clicked.connect(lambda:self.stopDemod(self.timer1,self.ui.label_16,self.ui.graphicsView))
 
         #self.ui.pushButton_5.clicked.connect(lambda: self.showDialog(self.ui.label_18))
@@ -94,13 +89,13 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         self.app.Title = 'Demod Measurement Test'
         # Create four measurement
         self.appMeasItem_1 = self.app.Measurements.SelectedItem
-        #self.appMeasItem_2 = self.app.Measurements.SelectedItem
+        # self.appMeasItem_2 = self.app.Measurements.SelectedItem
         # self.appMeasItem_2 = self.app.Measurements.SelectedItem # Need to be overWrite 
 
     # def demod_thread(self):
         # threading.Thread(target=lambda:self.StartDemod(self.ui.comboBox.currentText(),self.ui.lineEdit.text(),self.ui.lineEdit_2.text(),self.ui.lineEdit_3.text(),self.appMeasItem_1,channel_num=0)).start()
                 
-    def startDemod(self,filename,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer,filepath):
+    def startDemod(self,filename,demodem,symbol_rate,center_freq,filter_val,appMeas,channel_num,graphViewer,label1,label2):
         print([demodem,symbol_rate,center_freq,filter_val])
         for item in [demodem,symbol_rate,center_freq,filter_val]: 
             if item == '':
@@ -109,6 +104,11 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         # Calibrate the hardware
         appCAL = appMeas.SelectedAnalyzer.Calibration
         appCAL.Calibrate()
+
+        demod_N = demodem[3:] # value is 16 32 64 or 128
+        Demod_N=int(demod_N)
+        M=int(math.log(Demod_N,2))
+        max_rate =  int(symbol_rate)*M  
 
         # Config channel
         genericHandle = appMeas.SetMeasurementExtension(MeasurementExtension.ExtensionType())
@@ -154,26 +154,26 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         appTrace_symbol = self.appDisp.Traces.SelectedItem
 
         file_dict = {
-            '32QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
-            '64QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
-            '64QAM_150M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+             '32QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+             '64QAM_120M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
+             '64QAM_150M.csv': r'C:\Users\Administrator\Desktop\VSABitErrorRate\zeros_len4020_32QAM_origin_sym.csv',
         }
-        Data_origin = pd.read_csv(file_dict[filename])
-        self.initChannelTimer(appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem)                            
+        #Data_origin = pd.read_csv(file_dict[filename])
+        self.initChannelTimer(appTrace_IQ,appTrace_symbol,graphViewer,channel_num,demodem,max_rate,label1,label2)                            
 
 
-    def initChannelTimer(self,appTrace_IQ,appTrace_symbol,Data_origin,graphViewer,channel_num,demodem):
+    def initChannelTimer(self,appTrace_IQ,appTrace_symbol,graphViewer,channel_num,demodem,max_rate,label1,label2):
         exec('self.plot_timer{} = QtCore.QTimer()'.format(channel_num))
         timer = eval('self.plot_timer{}'.format(channel_num))
-        timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer))
+        timer.timeout.connect(lambda: self.DisplayAll(appTrace_IQ,appTrace_symbol,demodem,channel_num,graphViewer,max_rate,label1,label2))
         timer.start(100)
         # self.plot_timer = QtCore.QTimer()
         # self.plot_timer.timeout.connect(lambda: self.DisplayAll(self,appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer))
         # self.plot_timer.start(100)
 
-    def DisplayAll(self,appTrace_IQ,appTrace_symbol,Data_origin,demodem,channel_num,graphViewer):
+    def DisplayAll(self,appTrace_IQ,appTrace_symbol,demodem,channel_num,graphViewer,max_rate,label1,label2):
         self.PlotMap(appTrace_IQ,graphViewer,channel_num)
-        self.BerCal(Data_origin,appTrace_symbol,channel_num,demodem)
+        self.BerCal(appTrace_symbol,channel_num,demodem,max_rate,label1,label2)
      
     def PlotMap(self,appTrace_IQ,graphViewer,channel_num):
         file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_IQ_Data_channel'+str(channel_num)+r'.csv'
@@ -190,59 +190,63 @@ class DisplayWindow(QMainWindow,Ui_MainWindow):
         graphViewer.plot(I,Q,pen=None,symbol='+',symbolSize=1,symbolpen=None,symbolBrush=(100,100,255,50))
 
 
-    def BerCal(self,Data_origin,appTrace_symbol,channel_num,demodem):
+    def BerCal(self,appTrace_symbol,channel_num,demodem,max_rate,label1,label2):
         demod_N = demodem[3:] # value is 16 32 64 or 128
         Demod_N=int(demod_N)
         M=int(math.log(Demod_N,2))   
-        self.ber_count += 1
-        if self.ber_count==200:
-            self.times = 0
-            self.ber_count = 0
-            self.error_count_total = 0
-            self.ber = 0 
 
-        file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_Symbol_Data_channel'+str(channel_num)+r'.csv'
-        appTrace_symbol.SaveFile(file_path,'CSV', False)
+        file_path = r'C:\Users\Administrator\Desktop\VSABitErrorRate\demod_Qam_EVM_channel'+str(channel_num)+r'.csv'
+        appTrace_symbol.SaveFile(file_path,'CSV', True)
         Data_output = pd.read_csv(file_path)  
         symbol_list = Data_output.T.values.tolist()  # demod symbol 
-        origin_list = Data_origin.T.values.tolist()
+        EVM = float(symbol_list[0][7])/100
 
-        bit_Data_origin = []
-        bit_symbol_list = []
+        x = math.sqrt(3*math.log2(M)/(M*M-1)*2/(EVM*EVM*math.log2(Demod_N)))
+        Q = math.erfc(x)
+        ber = 2*(1-1/M)/math.log(M)*Q
 
-        for i in origin_list[0]:
-            origin_bin = bin(i)
-            origin_bin_list = list(origin_bin[2:])
-            zeros_seq = [0 for index in range(M-len(origin_bin_list))] # 生成长度为M-len(b)的零列表
-            origin_bit = np.hstack((np.array(zeros_seq),np.array(origin_bin_list)))
-            bit_Data_origin.append(list(origin_bit))
+        bit_rate = max_rate*(1-ber)
+        # bit_Data_origin = np.array([])
+        # bit_symbol_list = np.array([])
         
-        #print('111111111111111111111111')
-        for j in symbol_list[0]:
-            symbol_bin = bin(j)
-            symbol_bin_list = list(symbol_bin[2:])
-            zeros_seq = [0 for index in range(M-len(symbol_bin_list))] # 生成长度为M-len(b)的零列表
-            symbol_bit = np.hstack((np.array(zeros_seq),np.array(symbol_bin_list)))
-            bit_symbol_list.append(list(symbol_bit))
+        # for i in origin_list[0]:
+        #     origin_bin = bin(i)
+        #     origin_bin_list = list(origin_bin[2:])
+        #     zeros_seq = [0 for index in range(M-len(origin_bin_list))] # 生成长度为M-len(b)的零列表
+        #     origin_bit = np.hstack((np.array(zeros_seq,dtype='int'),np.array(origin_bin_list,dtype='int')))
+        #     bit_Data_origin = np.hstack((bit_Data_origin,origin_bit))
+        
+        # #print('111111111111111111111111')
+        # for j in symbol_list[0]:
+        #     symbol_bin = bin(j)
+        #     symbol_bin_list = list(symbol_bin[2:])
+        #     zeros_seq = [0 for index in range(M-len(symbol_bin_list))] # 生成长度为M-len(b)的零列表
+        #     symbol_bit = np.hstack((np.array(zeros_seq,dtype='int'),np.array(symbol_bin_list,dtype='int')))
+        #     bit_symbol_list = np.hstack((bit_symbol_list,symbol_bit))
 
-        #print('222222222222222222222222')
-        frameHeader = bit_Data_origin[0:80]
-        frameHeader_array = np.array(frameHeader,dtype='int')
-        count_array = np.array(bit_symbol_list[0:80],dtype='int')-frameHeader_array
-        count = 80 - np.sum(count_array==0)   
-        match_rate = count/80 
-
-        if match_rate>=0.5:
-            self.times += 1
-            data_array = np.array(bit_symbol_list[80:],dtype='int')
-            origin_data_array = np.array(bit_Data_origin[80:],dtype='int')
-            error = data_array-origin_data_array
-            error_count = len(bit_symbol_list[80:]) - np.sum(error==0)
-            self.error_count_total = self.error_count_total+error_count
-            self.ber =  self.error_count_total/(self.times*len(bit_symbol_list[80:]))
-
-        print('ber is',self.ber)
-        self.ui.label_21.setText(self.ber)
+        # #print('222222222222222222222222')
+        # frameHeader = bit_Data_origin[0:80]
+        # print(frameHeader)
+        # print(bit_symbol_list)
+        # frameHeader_array = np.array(frameHeader,dtype='int')
+        # for n in range(0,len(bit_symbol_list)-79):
+        #     count_array = np.array(bit_symbol_list[n:80+n],dtype='int')-frameHeader_array
+        #     count = 80 - np.sum(count_array==0)   
+        #     match_rate = count/80 
+        #     if match_rate>=0.95:
+        #         self.times += 1
+        #         data_array = np.array(bit_symbol_list[80+n:],dtype='int')
+        #         origin_data_array = np.array(bit_Data_origin[80:len(data_array)+80],dtype='int')
+        #         error = data_array-origin_data_array
+        #         error_count = len(bit_symbol_list[80+n:]) - np.sum(error==0)
+        #         self.error_count_total = self.error_count_total+error_count
+        #         self.symbol_count_total = self.symbol_count_total+len(bit_symbol_list[80+n:])
+        #         self.ber =  self.error_count_total/self.symbol_count_total
+        #         print('--------------------------------')
+        #     break
+        bitrate_str = str(bit_rate)+'Mbps'
+        label1.setText(bitrate_str)
+        label2.setText(str(ber))
     
     def DataRateCal(self): 
         return None
