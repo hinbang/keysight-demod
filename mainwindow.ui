@@ -213,7 +213,18 @@
             </widget>
            </item>
            <item>
-            <widget class="QComboBox" name="comboBox_4"/>
+            <widget class="QComboBox" name="comboBox_4">
+             <item>
+              <property name="text">
+               <string>32QAM_120M.csv</string>
+              </property>
+             </item>
+             <item>
+              <property name="text">
+               <string>64QAM_120M.csv</string>
+              </property>
+             </item>
+            </widget>
            </item>
           </layout>
          </item>
